@@ -32,7 +32,7 @@
 استخدم:
 
 ```bash
-echo "$GOOGLE_CREDENTIALS_JSON" > credentials.json && echo "$GOOGLE_TOKEN_JSON" > token.json && touch .env && python main_guardian.py
+printf "%s" "$GOOGLE_CREDENTIALS_JSON" > credentials.json && printf "%s" "$GOOGLE_TOKEN_JSON" > token.json && touch .env && python main_guardian.py
 ```
 
 أو اترك Railway يقرأ نفس الأمر من ملف `Procfile` الموجود بالمشروع.
