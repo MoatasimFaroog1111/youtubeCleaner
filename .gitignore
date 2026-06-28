@@ -1,0 +1,9 @@
+.env
+env.txt
+credentials.json
+token.json
+__pycache__/
+*.pyc
+*.log
+cleaning_log.json
+educational_log.json
