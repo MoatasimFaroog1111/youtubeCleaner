@@ -61,15 +61,33 @@ def get_google_credentials() -> Credentials:
 
             flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
 
-            # Google أوقف OOB flow (urn:ietf:wg:oauth:2.0:oob) — نستخدم run_local_server
-            # الحديث: يفتح المتصفح تلقائياً ويستقبل إعادة التوجيه على localhost.
-            creds = flow.run_local_server(
-                host="localhost",
-                port=0,
-                authorization_prompt_message="🔐 يرجى زيارة هذا الرابط في المتصفح وتفويض الحساب:",
-                success_message="✅ تم التفويض بنجاح! يمكنك إغلاق هذه النافذة.",
-                open_browser=True,
-            )
+            # وضعان:
+            # 1) run_local_server (افتراضي) — للمستخدم على جهازه المحلي، يفتح المتصفح.
+            # 2) يدوي (AUTH_MODE=manual) — لخادم بعيد: يطبع رابط، تلصق الكود بعد التفويض.
+            if os.getenv("AUTH_MODE", "").lower() == "manual":
+                flow.redirect_uri = "http://127.0.0.1:8080/"
+                auth_url, _ = flow.authorization_url(
+                    prompt="consent",
+                    access_type="offline",
+                    include_granted_scopes="true",
+                )
+                print("\n" + "=" * 60)
+                print("🔐 افتح الرابط التالي في متصفحك وفوّض الحساب:")
+                print(auth_url)
+                print("\n⚠️ بعد التفويض سيعيدك المتصفح إلى http://127.0.0.1:8080/?code=...")
+                print("   انسخ قيمة `code` كاملة من شريط العنوان والصقها هنا.")
+                print("=" * 60)
+                code = input("🔑 الصق الكود: ").strip()
+                flow.fetch_token(code=code)
+                creds = flow.credentials
+            else:
+                creds = flow.run_local_server(
+                    host="localhost",
+                    port=0,
+                    authorization_prompt_message="🔐 يرجى زيارة هذا الرابط في المتصفح وتفويض الحساب:",
+                    success_message="✅ تم التفويض بنجاح! يمكنك إغلاق هذه النافذة.",
+                    open_browser=True,
+                )
             logging.info("✅ تم تسجيل الدخول بنجاح عبر OAuth")
 
         with open(TOKEN_FILE, 'w') as f:
