@@ -11,7 +11,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-load_dotenv(os.path.join(BASE_DIR, 'env.txt'))
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 LOG_PATH = os.getenv('LOG_PATH', '/home/moatasim/youtube_cleaner/kids_guardian.log')
 CREDENTIALS_FILE = os.path.join(BASE_DIR, os.getenv('GOOGLE_CREDENTIALS_FILE', 'credentials.json'))
@@ -61,23 +61,15 @@ def get_google_credentials() -> Credentials:
 
             flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_FILE, SCOPES)
 
-            # بديل run_console() للمكتبات الحديثة
-            flow.redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
-            auth_url, _ = flow.authorization_url(
-                prompt='consent',
-                access_type='offline',
-                include_granted_scopes='true'
+            # Google أوقف OOB flow (urn:ietf:wg:oauth:2.0:oob) — نستخدم run_local_server
+            # الحديث: يفتح المتصفح تلقائياً ويستقبل إعادة التوجيه على localhost.
+            creds = flow.run_local_server(
+                host="localhost",
+                port=0,
+                authorization_prompt_message="🔐 يرجى زيارة هذا الرابط في المتصفح وتفويض الحساب:",
+                success_message="✅ تم التفويض بنجاح! يمكنك إغلاق هذه النافذة.",
+                open_browser=True,
             )
-
-            print("\n" + "=" * 60)
-            print("📌 افتح هذا الرابط في المتصفح وسجّل الدخول بحساب Google:")
-            print(auth_url)
-            print("=" * 60)
-
-            code = input("🔑 الصق كود التفويض هنا: ").strip()
-
-            flow.fetch_token(code=code)
-            creds = flow.credentials
             logging.info("✅ تم تسجيل الدخول بنجاح عبر OAuth")
 
         with open(TOKEN_FILE, 'w') as f:

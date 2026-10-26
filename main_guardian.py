@@ -10,7 +10,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-load_dotenv(os.path.join(BASE_DIR, "env.txt"))
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 LOG_PATH = os.getenv("LOG_PATH", "/home/moatasim/youtube_cleaner/kids_guardian.log")
 os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)

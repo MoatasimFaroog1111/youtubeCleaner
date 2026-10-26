@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from googleapiclient.errors import HttpError
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-load_dotenv(os.path.join(BASE_DIR, "env.txt"))
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 LOG_PATH = os.getenv("LOG_PATH", "/home/moatasim/youtube_cleaner/kids_guardian.log")
 EDU_LOG_PATH = os.getenv("EDU_LOG_PATH", "/home/moatasim/youtube_cleaner/educational_log.json")
