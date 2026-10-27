@@ -220,21 +220,46 @@ def log_educational_session(videos: list, category: str):
         json.dump(history, f, ensure_ascii=False, indent=2)
 
 
+def _load_processed_ids() -> set:
+    """تحميل معرفات الفيديوهات التي سبقت إضافتها (لتجنب التكرار)."""
+    try:
+        if os.path.exists(EDU_LOG_PATH):
+            with open(EDU_LOG_PATH, "r", encoding="utf-8") as f:
+                history = json.load(f)
+        else:
+            history = []
+    except (json.JSONDecodeError, OSError):
+        history = []
+
+    ids = set()
+    for session in history:
+        for v in session.get("videos", []):
+            if isinstance(v, dict) and v.get("video_id"):
+                ids.add(v["video_id"])
+    return ids
+
+
 def run_educational_discovery():
     from auth_google import get_authenticated_youtube
 
     youtube = get_authenticated_youtube()
     all_videos = []
+    processed_ids = _load_processed_ids()
+    added_this_run = set()
 
     logging.info("=== بدء اكتشاف المحتوى التعليمي ===")
 
     for category, queries in EDUCATIONAL_QUERIES.items():
         for query in queries:
-            videos = search_educational_videos(youtube, query, max_results=3)
+            videos = search_educational_videos(youtube, query, max_results=2)
 
             for video in videos:
-                rate_educational_video(youtube, video["video_id"])
-                add_to_child_playlist(youtube, video["video_id"])
+                vid = video["video_id"]
+                # لا نكرر إضافة فيديو سبق إضافته
+                if vid in processed_ids or vid in added_this_run:
+                    continue
+                add_to_child_playlist(youtube, vid)
+                added_this_run.add(vid)
 
             all_videos.extend(videos)
             log_educational_session(videos, category)
@@ -244,13 +269,17 @@ def run_educational_discovery():
         videos = get_trusted_channel_videos(youtube, channel_id, max_results=2)
 
         for video in videos:
-            rate_educational_video(youtube, video["video_id"])
-            add_to_child_playlist(youtube, video["video_id"])
+            vid = video["video_id"]
+            if vid in processed_ids or vid in added_this_run:
+                continue
+            add_to_child_playlist(youtube, vid)
+            added_this_run.add(vid)
 
         all_videos.extend(videos)
         logging.info(f"📺 {channel_name}: {len(videos)} فيديو")
 
     logging.info(f"=== إجمالي الفيديوهات التعليمية المكتشفة: {len(all_videos)} ===")
+    logging.info(f"=== أُضيف هذا التشغيل: {len(added_this_run)} فيديو ===")
     return all_videos
 
 
