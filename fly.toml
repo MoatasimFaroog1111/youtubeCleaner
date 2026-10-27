@@ -10,6 +10,3 @@ primary_region = "sin"
   EDU_LOG_PATH = "/tmp/educational_log.json"
   GOOGLE_CREDENTIALS_FILE = "credentials.json"
   GOOGLE_TOKEN_FILE = "token.json"
-
-[processes]
-  worker = "sh -c 'printf \"%s\" \"$GOOGLE_CREDENTIALS_JSON\" > credentials.json && printf \"%s\" \"$GOOGLE_TOKEN_JSON\" > token.json && touch .env && python main_guardian.py'"
