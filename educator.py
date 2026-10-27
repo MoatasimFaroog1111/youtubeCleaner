@@ -27,52 +27,54 @@ logging.basicConfig(
 )
 
 TRUSTED_EDUCATIONAL_CHANNELS = {
-    "UCtlcIZVBdFPSAtCoNZsTusg": "Learn with Zakaria - تعلم مع زكريا",
-    "UCmK69Z1mH_74G-hF-R1533A": "51Talk",
-    "UCWIdqSQekeGmUWlSFeCiEnA": "Osratouna TV - قناة أسرتنا",
-    "UCk1E19G6dM6tS3n7i51876g": "One 4 Kids (Zaky)",
     "UC9T7P4WqY57b32wR31v0rOg": "Numberblocks",
     "UC_s74qN3wR9g7-18Z7nN7-g": "Alphablocks",
-    "UCxS359o7e18146FmQe1yKMA": "Siraj - سراج",
     "UC4a-Gbdw7vOaccHmFo40b9g": "Khan Academy Kids",
+    "UCtlcIZVBdFPSAtCoNZsTusg": "Learn with Zakaria - تعلم مع زكريا",
+    "UCWIdqSQekeGmUWlSFeCiEnA": "Osratouna TV - قناة أسرتنا",
     "UCsooa4yRKGN_zEE8iknghZA": "TED-Ed",
 }
 
 EDUCATIONAL_QUERIES = {
-    "arabic_grade1": [
+    "english_phonics_ks1": [
+        "jolly phonics letter sounds phase 2 and 3",
+        "read write inc set 1 sounds phonics",
+        "blending and segmenting cvc words phonics year 1",
+    ],
+    "english_reading_ks1": [
+        "oxford reading tree level 1 read aloud",
+        "high frequency words year 1 common exception words",
+        "reading simple sentences year 1 uk",
+    ],
+    "maths_number_ks1": [
+        "numberblocks counting to 20",
+        "number and place value year 1 tens and ones",
+        "ordering numbers 1 to 50 year 1",
+    ],
+    "maths_operations_ks1": [
+        "numberblocks addition and subtraction",
+        "adding and subtracting within 20 year 1",
+        "number bonds to 10 and 20 year 1",
+    ],
+    "maths_shapes_ks1": [
+        "2d and 3d shapes year 1 uk",
+        "numberblocks shapes and patterns",
+        "counting in 2s 5s and 10s year 1",
+    ],
+    "science_ks1": [
+        "animals including humans year 1 science",
+        "plants and everyday materials year 1 science",
+        "seasonal changes autumn winter spring summer ks1",
+    ],
+    "arabic_supplementary": [
         "تعليم الحروف الهجائية العربية للاطفال مع التشكيل",
-        "تعليم القراءة للصف الاول الابتدائي مقاطع وكلمات",
-        "اصوات الحروف العربية حركات الفتح والضم والكسر للاطفال",
-    ],
-    "arabic_reading_grade1": [
         "قراءة كلمات ثلاثية للصف الاول الابتدائي",
-        "المد بالالف والواو والياء للصف الاول الابتدائي",
-        "تهجئة وقراءة جمل بسيطة للصف الاول الابتدائي",
+        "تعليم الارقام العربية للاطفال",
     ],
-    "math_grade1": [
-        "تعليم الارقام من 1 الى 20 للصف الاول الابتدائي",
-        "الجمع للصف الاول الابتدائي بالصور",
-        "الطرح للصف الاول الابتدائي بالصور",
-    ],
-    "math_shapes_grade1": [
-        "الاشكال الهندسية للصف الاول الابتدائي مربع دائرة مثلث",
-        "ترتيب الاعداد من الاصغر للاكبر للصف الاول",
-        "counting numbers 1 to 20 for grade 1",
-    ],
-    "english_grade1": [
-        "تعليم الحروف الانجليزية abc للصف الاول الابتدائي",
-        "phonics alphabet sounds for grade 1 kids",
-        "english numbers and colors for grade 1",
-    ],
-    "science_grade1": [
-        "الحيوانات والنباتات للصف الاول الابتدائي",
-        "اجزاء جسم الانسان للصف الاول الابتدائي",
-        "الطقس والفصول الاربعة للاطفال الصف الاول",
-    ],
-    "islamic_grade1": [
-        "تعليم سورة الفاتحة وقصار السور للاطفال الصف الاول",
-        "الاداب الاسلامية والاذكار للاطفال الصف الاول",
-        "تعليم الوضوء والصلاة للاطفال الصف الاول الابتدائي",
+    "islamic_supplementary": [
+        "تعليم سورة الفاتحة وقصار السور للاطفال",
+        "الاداب الاسلامية والاذكار للاطفال",
+        "تعليم الوضوء والصلاة للاطفال",
     ],
 }
 
