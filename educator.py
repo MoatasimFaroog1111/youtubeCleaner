@@ -171,7 +171,8 @@ def rate_educational_video(youtube, video_id: str) -> bool:
 
 
 def add_to_child_playlist(youtube, video_id: str) -> bool:
-    if not PLAYLIST_ID or PLAYLIST_ID == "YOUR_CHILD_PLAYLIST_ID":
+    playlist_id = os.getenv("YT_PLAYLIST_ID", "").strip()
+    if not playlist_id or playlist_id == "YOUR_CHILD_PLAYLIST_ID":
         logging.info("ℹ️ لم يتم تحديد PLAYLIST_ID، تم تخطي الإضافة إلى قائمة التشغيل.")
         return False
 
@@ -180,7 +181,7 @@ def add_to_child_playlist(youtube, video_id: str) -> bool:
             part="snippet",
             body={
                 "snippet": {
-                    "playlistId": PLAYLIST_ID,
+                    "playlistId": playlist_id,
                     "resourceId": {
                         "kind": "youtube#video",
                         "videoId": video_id
