@@ -62,3 +62,13 @@ def test_educator_live_denied(monkeypatch):
     with pytest.raises(PermissionError):
         educator.add_to_child_playlist(youtube, "video", dry_run=False)
     assert youtube.mock_calls == []
+
+
+def test_discovery_history_does_not_mark_preview_as_added(monkeypatch, tmp_path):
+    import json
+    path = tmp_path / "educational_log.json"
+    monkeypatch.setattr(educator, "EDU_LOG_PATH", str(path))
+    educator.log_educational_session([{"video_id": "preview-only"}], "maths")
+    assert educator._load_processed_ids() == set()
+    educator.log_educational_session([{"video_id": "actually-added"}], "maths", added_ids=["actually-added"])
+    assert educator._load_processed_ids() == {"actually-added"}

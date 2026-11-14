@@ -204,7 +204,7 @@ def add_to_child_playlist(youtube, video_id: str, dry_run: bool = True) -> bool:
         return False
 
 
-def log_educational_session(videos: list, category: str):
+def log_educational_session(videos: list, category: str, added_ids=None):
     try:
         if os.path.exists(EDU_LOG_PATH):
             with open(EDU_LOG_PATH, "r", encoding="utf-8") as f:
@@ -218,6 +218,7 @@ def log_educational_session(videos: list, category: str):
         "date": datetime.now().isoformat(),
         "category": category,
         "videos": videos,
+        "added_ids": list(added_ids or []),
     })
 
     history = history[-30:]
@@ -239,9 +240,8 @@ def _load_processed_ids() -> set:
 
     ids = set()
     for session in history:
-        for v in session.get("videos", []):
-            if isinstance(v, dict) and v.get("video_id"):
-                ids.add(v["video_id"])
+        # Only confirmed playlist additions count as processed. Discovery/preview is not a write.
+        ids.update(session.get("added_ids", []))
     return ids
 
 
@@ -259,6 +259,7 @@ def run_educational_discovery(dry_run: bool = True):
 
     for category, queries in EDUCATIONAL_QUERIES.items():
         for query in queries:
+            newly_added_ids = []
             videos = search_educational_videos(youtube, query, max_results=2)
 
             for video in videos:
@@ -269,9 +270,10 @@ def run_educational_discovery(dry_run: bool = True):
                 attempted_this_run.add(vid)
                 if add_to_child_playlist(youtube, vid, dry_run=dry_run):
                     added_this_run.add(vid)
+                    newly_added_ids.append(vid)
 
             all_videos.extend(videos)
-            log_educational_session(videos, category)
+            log_educational_session(videos, category, added_ids=newly_added_ids)
             logging.info(f"✅ {category}: {len(videos)} فيديو لـ '{query}'")
 
     for channel_id, channel_name in list(TRUSTED_EDUCATIONAL_CHANNELS.items())[:4]:
@@ -284,6 +286,7 @@ def run_educational_discovery(dry_run: bool = True):
             attempted_this_run.add(vid)
             if add_to_child_playlist(youtube, vid, dry_run=dry_run):
                 added_this_run.add(vid)
+                log_educational_session([video], "trusted_channel", added_ids=[vid])
 
         all_videos.extend(videos)
         logging.info(f"📺 {channel_name}: {len(videos)} فيديو")
