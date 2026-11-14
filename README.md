@@ -43,3 +43,24 @@ printf "%s" "$GOOGLE_CREDENTIALS_JSON" > credentials.json && printf "%s" "$GOOGL
 
 ## ملاحظة مهمة
 تخزين Railway غالبًا **ephemeral**، لذلك ملفات `/tmp` (اللوجات والتقارير) قد تضيع بعد إعادة التشغيل، وهذا متوقع.
+
+## Safety (Phase 1)
+
+Default behavior is **DRY_RUN=true**. No playlist items are deleted, no likes
+removed, no channels unsubscribed, and no educational videos added. To enable
+live changes, set BOTH variables explicitly after reviewing preview reports:
+
+```text
+DRY_RUN=false
+YOUTUBE_WRITE_APPROVAL=I_APPROVE
+```
+
+Keep approval variables out of the repository. The write gate is enforced inside
+each modifying function, not just the main worker. Live operations are not
+reversible automatically. Test without accessing YouTube:
+
+```bash
+python -m pytest -q
+```
+
+In preview mode, removal totals indicate candidates, not actual deletions.
