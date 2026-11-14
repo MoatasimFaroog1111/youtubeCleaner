@@ -23,3 +23,6 @@ jobs:
       - run: python -m pytest -q
         env:
           DRY_RUN: 'true'
+          LOG_PATH: /tmp/kids_guardian.log
+          CLEAN_LOG_PATH: /tmp/cleaning_log.json
+          EDU_LOG_PATH: /tmp/educational_log.json
