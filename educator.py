@@ -9,6 +9,7 @@ import logging
 from datetime import datetime
 from dotenv import load_dotenv
 from googleapiclient.errors import HttpError
+from safety import is_dry_run, require_write_approval
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
@@ -170,7 +171,11 @@ def rate_educational_video(youtube, video_id: str) -> bool:
         return False
 
 
-def add_to_child_playlist(youtube, video_id: str) -> bool:
+def add_to_child_playlist(youtube, video_id: str, dry_run: bool = True) -> bool:
+    require_write_approval(dry_run)
+    if dry_run:
+        logging.info("[DRY RUN] Would add video: %s", video_id)
+        return False
     playlist_id = os.getenv("YT_PLAYLIST_ID", "").strip()
     if not playlist_id or playlist_id == "YOUR_CHILD_PLAYLIST_ID":
         logging.info("ℹ️ لم يتم تحديد PLAYLIST_ID، تم تخطي الإضافة إلى قائمة التشغيل.")
@@ -199,7 +204,7 @@ def add_to_child_playlist(youtube, video_id: str) -> bool:
         return False
 
 
-def log_educational_session(videos: list, category: str):
+def log_educational_session(videos: list, category: str, added_ids=None):
     try:
         if os.path.exists(EDU_LOG_PATH):
             with open(EDU_LOG_PATH, "r", encoding="utf-8") as f:
@@ -213,6 +218,7 @@ def log_educational_session(videos: list, category: str):
         "date": datetime.now().isoformat(),
         "category": category,
         "videos": videos,
+        "added_ids": list(added_ids or []),
     })
 
     history = history[-30:]
@@ -234,36 +240,40 @@ def _load_processed_ids() -> set:
 
     ids = set()
     for session in history:
-        for v in session.get("videos", []):
-            if isinstance(v, dict) and v.get("video_id"):
-                ids.add(v["video_id"])
+        # Only confirmed playlist additions count as processed. Discovery/preview is not a write.
+        ids.update(session.get("added_ids", []))
     return ids
 
 
-def run_educational_discovery():
+def run_educational_discovery(dry_run: bool = True):
+    require_write_approval(dry_run)
     from auth_google import get_authenticated_youtube
 
     youtube = get_authenticated_youtube()
     all_videos = []
     processed_ids = _load_processed_ids()
     added_this_run = set()
+    attempted_this_run = set()
 
     logging.info("=== بدء اكتشاف المحتوى التعليمي ===")
 
     for category, queries in EDUCATIONAL_QUERIES.items():
         for query in queries:
+            newly_added_ids = []
             videos = search_educational_videos(youtube, query, max_results=2)
 
             for video in videos:
                 vid = video["video_id"]
                 # لا نكرر إضافة فيديو سبق إضافته
-                if vid in processed_ids or vid in added_this_run:
+                if vid in processed_ids or vid in attempted_this_run:
                     continue
-                add_to_child_playlist(youtube, vid)
-                added_this_run.add(vid)
+                attempted_this_run.add(vid)
+                if add_to_child_playlist(youtube, vid, dry_run=dry_run):
+                    added_this_run.add(vid)
+                    newly_added_ids.append(vid)
 
             all_videos.extend(videos)
-            log_educational_session(videos, category)
+            log_educational_session(videos, category, added_ids=newly_added_ids)
             logging.info(f"✅ {category}: {len(videos)} فيديو لـ '{query}'")
 
     for channel_id, channel_name in list(TRUSTED_EDUCATIONAL_CHANNELS.items())[:4]:
@@ -271,10 +281,12 @@ def run_educational_discovery():
 
         for video in videos:
             vid = video["video_id"]
-            if vid in processed_ids or vid in added_this_run:
+            if vid in processed_ids or vid in attempted_this_run:
                 continue
-            add_to_child_playlist(youtube, vid)
-            added_this_run.add(vid)
+            attempted_this_run.add(vid)
+            if add_to_child_playlist(youtube, vid, dry_run=dry_run):
+                added_this_run.add(vid)
+                log_educational_session([video], "trusted_channel", added_ids=[vid])
 
         all_videos.extend(videos)
         logging.info(f"📺 {channel_name}: {len(videos)} فيديو")
@@ -285,7 +297,7 @@ def run_educational_discovery():
 
 
 if __name__ == "__main__":
-    videos = run_educational_discovery()
+    videos = run_educational_discovery(dry_run=is_dry_run())
     print(f"تم اكتشاف {len(videos)} فيديو تعليمي")
     for video in videos[:5]:
         print(f"- {video['title']} ({video['channel']})")

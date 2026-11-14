@@ -8,6 +8,7 @@ import time
 import logging
 from datetime import datetime
 from dotenv import load_dotenv
+from safety import is_dry_run, require_write_approval
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
@@ -49,10 +50,14 @@ def run_daily_protection():
     logging.info(f"🚀 بدء الدورة اليومية: {datetime.now()}")
     logging.info("=" * 60)
 
+    dry_run = is_dry_run()
+    require_write_approval(dry_run)
+    logging.info("Safety mode: %s", "DRY_RUN" if dry_run else "LIVE APPROVED")
+
     # 1) طبقة التنظيف / التحقق من الاتصال
     try:
         from cleaner import clear_watch_history_oauth
-        ok = clear_watch_history_oauth()
+        ok = clear_watch_history_oauth(dry_run=dry_run)
         logging.info(f"🧹 نتيجة cleaner: {'نجح ✅' if ok else 'فشل ❌'}")
     except Exception as e:
         logging.error(f"❌ Cleaner error: {e}")
@@ -60,7 +65,7 @@ def run_daily_protection():
     # 2) اكتشاف المحتوى التعليمي
     try:
         from educator import run_educational_discovery
-        videos = run_educational_discovery()
+        videos = run_educational_discovery(dry_run=dry_run)
         logging.info(f"🎓 عدد الفيديوهات التعليمية المكتشفة: {len(videos)}")
     except Exception as e:
         logging.error(f"❌ Educator error: {e}")

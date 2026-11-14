@@ -1,0 +1,28 @@
+name: Safety tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [safety/phase1-dry-run-approval-tests]
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -r requirements.txt
+      - run: python -m pytest -q
+        env:
+          DRY_RUN: 'true'
+          LOG_PATH: /tmp/kids_guardian.log
+          CLEAN_LOG_PATH: /tmp/cleaning_log.json
+          EDU_LOG_PATH: /tmp/educational_log.json

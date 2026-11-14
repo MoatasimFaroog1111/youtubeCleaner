@@ -11,6 +11,7 @@ import time
 from datetime import datetime
 from dotenv import load_dotenv
 from googleapiclient.errors import HttpError
+from safety import is_dry_run, require_write_approval
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
@@ -149,8 +150,9 @@ def get_playlist_items(youtube, playlist_id: str) -> list:
     return items
 
 
-def delete_playlist_item(youtube, playlist_item_id: str, video_title: str, dry_run: bool = False) -> bool:
+def delete_playlist_item(youtube, playlist_item_id: str, video_title: str, dry_run: bool = True) -> bool:
     """حذف فيديو من قائمة التشغيل"""
+    require_write_approval(dry_run)
     if dry_run:
         logging.info(f"🔍 [DRY RUN] سيُحذف: {video_title[:60]}")
         return True
@@ -166,7 +168,7 @@ def delete_playlist_item(youtube, playlist_item_id: str, video_title: str, dry_r
         return False
 
 
-def clean_playlist(youtube, playlist_id: str, playlist_title: str, dry_run: bool = False) -> dict:
+def clean_playlist(youtube, playlist_id: str, playlist_title: str, dry_run: bool = True) -> dict:
     """تنظيف قائمة تشغيل من المحتوى غير المناسب"""
     logging.info(f"🔎 فحص قائمة: {playlist_title} ({playlist_id})")
     items = get_playlist_items(youtube, playlist_id)
@@ -237,8 +239,9 @@ def get_liked_videos(youtube) -> list:
     return items
 
 
-def remove_like_from_video(youtube, video_id: str, title: str, dry_run: bool = False) -> bool:
+def remove_like_from_video(youtube, video_id: str, title: str, dry_run: bool = True) -> bool:
     """إزالة الإعجاب عن فيديو غير مناسب"""
+    require_write_approval(dry_run)
     if dry_run:
         logging.info(f"🔍 [DRY RUN] سيُزال الإعجاب عن: {title[:60]}")
         return True
@@ -287,8 +290,9 @@ def get_all_subscriptions(youtube) -> list:
     return subs
 
 
-def unsubscribe_inappropriate_channel(youtube, channel_id: str, channel_name: str, dry_run: bool = False) -> bool:
+def unsubscribe_inappropriate_channel(youtube, channel_id: str, channel_name: str, dry_run: bool = True) -> bool:
     """إلغاء الاشتراك في قناة غير مناسبة"""
+    require_write_approval(dry_run)
     if dry_run:
         logging.info(f"🔍 [DRY RUN] سيُلغى الاشتراك في: {channel_name}")
         return True
@@ -334,7 +338,7 @@ def save_cleaning_report(report: dict):
     logging.info(f"💾 تم حفظ تقرير التنظيف في: {CLEAN_LOG_PATH}")
 
 
-def clear_watch_history_oauth(dry_run: bool = False) -> bool:
+def clear_watch_history_oauth(dry_run: bool = True) -> bool:
     """
     الدالة الرئيسية — تُستدعى من main_guardian.py
     تنظف: قوائم التشغيل + فيديوهات الإعجاب + الاشتراكات غير المناسبة
@@ -342,6 +346,7 @@ def clear_watch_history_oauth(dry_run: bool = False) -> bool:
     dry_run=False → حذف فعلي
     """
     from auth_google import get_authenticated_youtube
+    require_write_approval(dry_run)
 
     logging.info("=" * 50)
     logging.info(f"🧹 بدء جلسة التنظيف {'[DRY RUN]' if dry_run else '[فعلي]'}: {datetime.now()}")
@@ -420,8 +425,8 @@ def clear_watch_history_oauth(dry_run: bool = False) -> bool:
 
 if __name__ == "__main__":
     print("🧹 تشغيل منظف المحتوى...")
-    print("⚠️  وضع الاختبار (DRY RUN) - لن يُحذف شيء فعلياً")
-    print("    لتفعيل الحذف الفعلي: غيّر dry_run=True إلى dry_run=False")
-    result = clear_watch_history_oauth(dry_run=False)
+    print("⚠️  وضع DRY RUN افتراضياً")
+    print("    يلزم DRY_RUN=false و YOUTUBE_WRITE_APPROVAL=I_APPROVE للكتابة")
+    result = clear_watch_history_oauth(dry_run=is_dry_run())
     print(f"نتيجة: {'نجح ✅' if result else 'فشل ❌'}")
     print(f"راجع اللوج: {LOG_PATH}")
